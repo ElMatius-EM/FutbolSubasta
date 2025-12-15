@@ -1,0 +1,519 @@
+import React, { useState } from 'react';
+import { User, Shield, Trophy, DollarSign, Users, ChevronRight, Activity, Gavel, HandCoins, Shirt, Menu, X } from 'lucide-react';
+
+// --- ESTILOS CSS PARA 3D FLIP Y RESPONSIVE ---
+const styles = `
+  .perspective-1000 { perspective: 1000px; }
+  .preserve-3d { transform-style: preserve-3d; }
+  .backface-hidden { 
+    -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden; 
+  }
+  .rotate-y-180 { transform: rotateY(180deg); }
+  
+  /* Animación para el modal */
+  @keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .animate-modal { animation: fade-in-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  
+  /* Scrollbar oculta para móviles pero funcional */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+`;
+
+// --- BASE DE DATOS (44 JUGADORES) ---
+const PLAYERS_DB = {
+  GK: [ // R1: Arqueros
+    { id: 'gk1', name: 'Franco Armani', team: 'River Plate', rating: 88, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Franco_Armani_2018.jpg/245px-Franco_Armani_2018.jpg' },
+    { id: 'gk2', name: 'Sergio Romero', team: 'Boca Juniors', rating: 86, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/bf/Sergio_Romero_2018.jpg/245px-Sergio_Romero_2018.jpg' },
+    { id: 'gk3', name: 'Gabriel Arias', team: 'Racing Club', rating: 83, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Gabriel_Arias_2018.jpg/245px-Gabriel_Arias_2018.jpg' },
+    { id: 'gk4', name: 'Guido Herrera', team: 'Talleres', rating: 81, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Guido_Herrera.jpg/245px-Guido_Herrera.jpg' }
+  ],
+  LD: [ // R2: Lateral Derecho
+    { id: 'ld1', name: 'Luis Advíncula', team: 'Boca Juniors', rating: 82, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Luis_Adv%C3%ADncula_2018.jpg/245px-Luis_Adv%C3%ADncula_2018.jpg' },
+    { id: 'ld2', name: 'Fabricio Bustos', team: 'River Plate', rating: 80, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Fabricio_Bustos.jpg/245px-Fabricio_Bustos.jpg' },
+    { id: 'ld3', name: 'Gastón Martirena', team: 'Racing Club', rating: 78, image: 'placeholder' },
+    { id: 'ld4', name: 'Juan Barinaga', team: 'Boca Juniors', rating: 75, image: 'placeholder' }
+  ],
+  DFC1: [ // R3: Primer Central
+    { id: 'dfc1a', name: 'Paulo Díaz', team: 'River Plate', rating: 87, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Paulo_D%C3%ADaz.jpg/245px-Paulo_D%C3%ADaz.jpg' },
+    { id: 'dfc1b', name: 'Cristian Lema', team: 'Boca Juniors', rating: 80, image: 'placeholder' },
+    { id: 'dfc1c', name: 'Marco Di Cesare', team: 'Racing Club', rating: 82, image: 'placeholder' },
+    { id: 'dfc1d', name: 'Joaquín Laso', team: 'Independiente', rating: 76, image: 'placeholder' }
+  ],
+  DFC2: [ // R4: Segundo Central
+    { id: 'dfc2a', name: 'Marcos Rojo', team: 'Boca Juniors', rating: 84, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Marcos_Rojo_2018.jpg/245px-Marcos_Rojo_2018.jpg' },
+    { id: 'dfc2b', name: 'Germán Pezzella', team: 'River Plate', rating: 85, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Germ%C3%A1n_Pezzella_2018.jpg/245px-Germ%C3%A1n_Pezzella_2018.jpg' },
+    { id: 'dfc2c', name: 'Carlos Izquierdoz', team: 'Lanús', rating: 79, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Carlos_Izquierdoz.jpg/245px-Carlos_Izquierdoz.jpg' },
+    { id: 'dfc2d', name: 'Walter Kannemann', team: 'Gremio (Invitado)', rating: 81, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Walter_Kannemann.jpg/245px-Walter_Kannemann.jpg' }
+  ],
+  LI: [ // R5: Lateral Izquierdo
+    { id: 'li1', name: 'Marcos Acuña', team: 'River Plate', rating: 86, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Marcos_Acu%C3%B1a_2018.jpg/245px-Marcos_Acu%C3%B1a_2018.jpg' },
+    { id: 'li2', name: 'Lautaro Blanco', team: 'Boca Juniors', rating: 81, image: 'placeholder' },
+    { id: 'li3', name: 'Gabriel Rojas', team: 'Racing Club', rating: 79, image: 'placeholder' },
+    { id: 'li4', name: 'Malcom Braida', team: 'San Lorenzo', rating: 78, image: 'placeholder' }
+  ],
+  MCD: [ // R6: Volante Central
+    { id: 'mcd1', name: 'Enzo Pérez', team: 'Estudiantes', rating: 85, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Enzo_P%C3%A9rez_2018.jpg/245px-Enzo_P%C3%A9rez_2018.jpg' },
+    { id: 'mcd2', name: 'Santiago Ascacíbar', team: 'Estudiantes', rating: 82, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Santiago_Ascacibar.jpg/245px-Santiago_Ascacibar.jpg' },
+    { id: 'mcd3', name: 'Rodrigo Villagra', team: 'River Plate', rating: 79, image: 'placeholder' },
+    { id: 'mcd4', name: 'Ivan Marcone', team: 'Independiente', rating: 78, image: 'placeholder' }
+  ],
+  MC: [ // R7: Volante Mixto
+    { id: 'mc1', name: 'Pol Fernández', team: 'Boca Juniors', rating: 80, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Guillermo_Mat%C3%ADas_Fern%C3%A1ndez.jpg/245px-Guillermo_Mat%C3%ADas_Fern%C3%A1ndez.jpg' },
+    { id: 'mc2', name: 'Santiago Simón', team: 'River Plate', rating: 81, image: 'placeholder' },
+    { id: 'mc3', name: 'Juan Nardoni', team: 'Racing Club', rating: 79, image: 'placeholder' },
+    { id: 'mc4', name: 'Rodrigo Aliendro', team: 'River Plate', rating: 82, image: 'placeholder' }
+  ],
+  MD: [ // R8: Volante Ofensivo / Derecho
+    { id: 'md1', name: 'Claudio Aquino', team: 'Vélez', rating: 86, image: 'placeholder' },
+    { id: 'md2', name: 'Maxi Meza', team: 'River Plate', rating: 83, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Maximiliano_Meza_2018.jpg/245px-Maximiliano_Meza_2018.jpg' },
+    { id: 'md3', name: 'Exequiel Zeballos', team: 'Boca Juniors', rating: 81, image: 'placeholder' },
+    { id: 'md4', name: 'Santiago Sosa', team: 'Racing Club', rating: 80, image: 'placeholder' }
+  ],
+  MI: [ // R9: Volante Creativo / Izquierdo
+    { id: 'mi1', name: 'Kevin Zenón', team: 'Boca Juniors', rating: 88, image: 'placeholder' },
+    { id: 'mi2', name: 'Juanfer Quintero', team: 'Racing Club', rating: 85, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Juan_Fernando_Quintero_2018.jpg/245px-Juan_Fernando_Quintero_2018.jpg' },
+    { id: 'mi3', name: 'Pity Martínez', team: 'River Plate', rating: 84, image: 'placeholder' },
+    { id: 'mi4', name: 'Franco Cervi', team: 'Celta (Posible)', rating: 80, image: 'placeholder' }
+  ],
+  DC1: [ // R10: Delantero 1
+    { id: 'dc1a', name: 'Edinson Cavani', team: 'Boca Juniors', rating: 89, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Edinson_Cavani_2018.jpg/245px-Edinson_Cavani_2018.jpg' },
+    { id: 'dc1b', name: 'Maravilla Martínez', team: 'Racing Club', rating: 86, image: 'placeholder' },
+    { id: 'dc1c', name: 'Walter Bou', team: 'Lanús', rating: 82, image: 'placeholder' },
+    { id: 'dc1d', name: 'Gabriel Ávalos', team: 'Independiente', rating: 80, image: 'placeholder' }
+  ],
+  DC2: [ // R11: Delantero 2
+    { id: 'dc2a', name: 'Miguel Borja', team: 'River Plate', rating: 88, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Miguel_Borja_2018.jpg/245px-Miguel_Borja_2018.jpg' },
+    { id: 'dc2b', name: 'Miguel Merentiel', team: 'Boca Juniors', rating: 85, image: 'placeholder' },
+    { id: 'dc2c', name: 'Pablo Solari', team: 'River Plate', rating: 81, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Pablo_Solari.jpg/245px-Pablo_Solari.jpg' },
+    { id: 'dc2d', name: 'Facundo Colidio', team: 'River Plate', rating: 82, image: 'placeholder' }
+  ]
+};
+
+const ROUNDS_SCHEDULE = [
+  { key: 'GK', label: 'Arquero', short: 'ARQ' },
+  { key: 'LD', label: 'Lateral Derecho', short: 'LD' },
+  { key: 'DFC1', label: 'Primer Central', short: 'DFC' },
+  { key: 'DFC2', label: 'Segundo Central', short: 'DFC' },
+  { key: 'LI', label: 'Lateral Izquierdo', short: 'LI' },
+  { key: 'MCD', label: 'Volante Central (5)', short: 'MCD' },
+  { key: 'MC', label: 'Volante Mixto', short: 'MC' },
+  { key: 'MD', label: 'Volante Ofensivo Der.', short: 'MD' },
+  { key: 'MI', label: 'Volante Creativo Izq.', short: 'MI' },
+  { key: 'DC1', label: 'Delantero de Área', short: 'DC' },
+  { key: 'DC2', label: 'Segundo Delantero', short: 'DC' }
+];
+
+const PENALTY_PLAYER = { name: 'Jugador Libre', team: 'Sin Club', rating: 55, image: null };
+const INITIAL_BUDGET = 900;
+const MIN_BID_INCREMENT = 10;
+const INITIAL_SQUAD = {
+  GK: null, LD: null, DFC1: null, DFC2: null, LI: null,
+  MCD: null, MC: null, MD: null, MI: null,
+  DC1: null, DC2: null
+};
+
+export default function App() {
+  const [phase, setPhase] = useState('SETUP'); 
+  const [roundIndex, setRoundIndex] = useState(0); 
+  
+  const [participants, setParticipants] = useState([
+    { id: 0, name: '', budget: INITIAL_BUDGET, squad: { ...INITIAL_SQUAD }, totalRating: 0 },
+    { id: 1, name: '', budget: INITIAL_BUDGET, squad: { ...INITIAL_SQUAD }, totalRating: 0 },
+    { id: 2, name: '', budget: INITIAL_BUDGET, squad: { ...INITIAL_SQUAD }, totalRating: 0 },
+    { id: 3, name: '', budget: INITIAL_BUDGET, squad: { ...INITIAL_SQUAD }, totalRating: 0 },
+  ]);
+
+  const [currentBids, setCurrentBids] = useState({ 0: 0, 1: 0, 2: 0, 3: 0 });
+  const [pickOrder, setPickOrder] = useState([]); 
+  const [currentPickerIndex, setCurrentPickerIndex] = useState(0); 
+  const [availableCards, setAvailableCards] = useState([]); 
+  const [activeAuction, setActiveAuction] = useState(null); 
+
+  const handleNameChange = (id, val) => {
+    const newP = [...participants];
+    newP[id].name = val;
+    setParticipants(newP);
+  };
+
+  const startGame = () => {
+    const filled = participants.map(p => ({ ...p, name: p.name || `DT ${p.id + 1}` }));
+    setParticipants(filled);
+    startRound(0);
+  };
+
+  const startRound = (rIdx) => {
+    setRoundIndex(rIdx);
+    setPhase('AUCTION_BID');
+    setCurrentBids({ 0: 0, 1: 0, 2: 0, 3: 0 });
+    const roundKey = ROUNDS_SCHEDULE[rIdx].key;
+    const shuffledPlayers = [...PLAYERS_DB[roundKey]].sort(() => Math.random() - 0.5);
+    setAvailableCards(shuffledPlayers.map(p => ({ ...p, revealed: false, ownerId: null })));
+  };
+
+  const submitBids = () => {
+    const bidsArray = participants.map(p => ({
+      id: p.id,
+      bid: parseInt(currentBids[p.id]) || 0
+    })).sort((a, b) => b.bid - a.bid || Math.random() - 0.5);
+    setPickOrder(bidsArray);
+    setCurrentPickerIndex(0);
+    setPhase('AUCTION_PICK');
+  };
+
+  const handlePickCard = (cardIndex) => {
+    if (availableCards[cardIndex].revealed) return;
+    const currentPickerInfo = pickOrder[currentPickerIndex];
+    setActiveAuction({
+      cardIndex: cardIndex,
+      currentWinnerId: currentPickerInfo.id,
+      currentPrice: currentPickerInfo.bid, 
+      originalPickerId: currentPickerInfo.id,
+      cardData: availableCards[cardIndex] 
+    });
+  };
+
+  const handleLiveBid = (bidderId) => {
+    if (!activeAuction) return;
+    setActiveAuction(prev => ({
+      ...prev,
+      currentWinnerId: bidderId,
+      currentPrice: prev.currentPrice + MIN_BID_INCREMENT
+    }));
+  };
+
+  const finalizeAuction = () => {
+    if (!activeAuction) return;
+    const { cardIndex, currentWinnerId, currentPrice } = activeAuction;
+    const newParticipants = [...participants];
+    const newCards = [...availableCards];
+
+    newParticipants[currentWinnerId].budget -= currentPrice;
+    let finalPlayer = newCards[cardIndex];
+    if (newParticipants[currentWinnerId].budget < 0) {
+       finalPlayer = { ...finalPlayer, ...PENALTY_PLAYER, name: `${finalPlayer.name} (Embargado)` };
+    }
+
+    const currentRoundInfo = ROUNDS_SCHEDULE[roundIndex];
+    newParticipants[currentWinnerId].squad[currentRoundInfo.key] = finalPlayer;
+
+    newCards[cardIndex].revealed = true;
+    newCards[cardIndex].ownerId = currentWinnerId;
+    newCards[cardIndex].finalStat = finalPlayer;
+
+    setParticipants(newParticipants);
+    setAvailableCards(newCards);
+    setActiveAuction(null);
+    advanceTurn(newParticipants);
+  };
+
+  const advanceTurn = (currentParticipants) => {
+    const roundKey = ROUNDS_SCHEDULE[roundIndex].key;
+    const nextPickerIndex = pickOrder.findIndex(p => currentParticipants[p.id].squad[roundKey] === null);
+    if (nextPickerIndex !== -1) {
+      setCurrentPickerIndex(nextPickerIndex);
+    } else {
+      setTimeout(() => {
+        if (roundIndex < ROUNDS_SCHEDULE.length - 1) {
+          startRound(roundIndex + 1);
+        } else {
+          calculateFinalScores(currentParticipants);
+        }
+      }, 1500);
+    }
+  };
+
+  const calculateFinalScores = (finalParticipants) => {
+    const calculated = finalParticipants.map(p => {
+      const stats = Object.values(p.squad).map(s => s ? s.rating : 0);
+      const avg = Math.round(stats.reduce((a, b) => a + b, 0) / stats.length);
+      return { ...p, totalRating: avg };
+    });
+    setParticipants(calculated);
+    setPhase('GAME_OVER');
+  };
+
+  const currentRoundInfo = ROUNDS_SCHEDULE[roundIndex] || ROUNDS_SCHEDULE[0];
+  const activePickerId = pickOrder[currentPickerIndex]?.id;
+
+  // --- RENDER ---
+  return (
+    <div className="h-screen bg-slate-950 flex flex-col font-sans overflow-hidden relative text-white">
+      <style>{styles}</style>
+      
+      {/* SETUP PHASE */}
+      {phase === 'SETUP' && (
+        <div className="absolute inset-0 z-50 bg-gradient-to-br from-blue-950 to-slate-950 flex flex-col items-center justify-center p-4">
+          <div className="bg-white/10 backdrop-blur-xl p-6 md:p-8 rounded-3xl shadow-2xl max-w-lg w-full border border-white/10 flex flex-col max-h-[90vh] overflow-y-auto">
+            <div className="text-center mb-6">
+              <h1 className="text-3xl md:text-4xl font-black mb-2 tracking-tighter uppercase text-yellow-400">Gran DT</h1>
+              <p className="text-blue-200 text-sm md:text-lg font-light">Liga Argentina • 44 Estrellas</p>
+            </div>
+            <div className="grid grid-cols-1 gap-4 mb-6">
+              {participants.map((p, i) => (
+                <div key={i} className="flex flex-col gap-1">
+                  <label className="text-[10px] font-bold text-blue-300 uppercase pl-1">DT {i + 1}</label>
+                  <input
+                    type="text"
+                    placeholder={`Nombre del DT ${i + 1}`}
+                    value={p.name}
+                    onChange={(e) => handleNameChange(i, e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-800/80 text-white rounded-xl font-bold border border-slate-700 focus:border-yellow-400 outline-none transition-all focus:bg-slate-800"
+                  />
+                </div>
+              ))}
+            </div>
+            <button onClick={startGame} className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-slate-900 font-black py-4 rounded-xl text-lg shadow-lg active:scale-95 transition-all">
+              INICIAR TEMPORADA
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* GAME OVER PHASE */}
+      {phase === 'GAME_OVER' && (
+        <div className="absolute inset-0 z-50 bg-slate-950 flex flex-col items-center p-4 overflow-y-auto">
+          <h1 className="text-3xl md:text-4xl font-black text-yellow-400 mb-8 mt-4 uppercase">Resultados</h1>
+          <div className="grid grid-cols-1 gap-6 w-full max-w-5xl pb-10">
+            {[...participants].sort((a, b) => b.totalRating - a.totalRating).map((p, idx) => (
+              <div key={p.id} className="bg-slate-900 rounded-2xl overflow-hidden shadow-2xl flex flex-col border border-slate-800">
+                <div className={`p-4 flex justify-between items-center ${idx === 0 ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-slate-900' : 'bg-slate-800 text-white'}`}>
+                  <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-black/20 rounded-full flex items-center justify-center font-black text-lg">{idx + 1}</div>
+                      <div>
+                          <h2 className="text-xl font-black uppercase leading-none">{p.name}</h2>
+                          <div className="text-[10px] font-bold opacity-75 uppercase flex gap-3 mt-1">
+                              <span>Rating: {p.totalRating}</span><span>${p.budget}M</span>
+                          </div>
+                      </div>
+                  </div>
+                </div>
+                <div className="p-4 bg-green-900/50 relative">
+                    {/* Compact Squad View */}
+                   <div className="grid grid-cols-11 gap-1 h-12 md:h-16">
+                        <div className="col-span-1 flex items-center justify-center"><PlayerToken player={p.squad.GK} label="ARQ" small /></div>
+                        <div className="col-span-4 flex items-center justify-around border-l border-white/10 border-r">
+                            <PlayerToken player={p.squad.LI} label="LI" small /><PlayerToken player={p.squad.DFC2} label="DFC" small />
+                            <PlayerToken player={p.squad.DFC1} label="DFC" small /><PlayerToken player={p.squad.LD} label="LD" small />
+                        </div>
+                        <div className="col-span-4 flex items-center justify-around border-r border-white/10">
+                             <PlayerToken player={p.squad.MI} label="MI" small /><PlayerToken player={p.squad.MCD} label="MCD" small />
+                             <PlayerToken player={p.squad.MC} label="MC" small /><PlayerToken player={p.squad.MD} label="MD" small />
+                        </div>
+                        <div className="col-span-2 flex items-center justify-around">
+                            <PlayerToken player={p.squad.DC1} label="DC" small /><PlayerToken player={p.squad.DC2} label="DC" small />
+                        </div>
+                   </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <button onClick={() => window.location.reload()} className="mb-8 bg-white text-slate-900 px-8 py-3 rounded-full font-bold shadow-lg">Jugar Nueva Temporada</button>
+        </div>
+      )}
+
+      {/* MODAL SUBASTA (RESPONSIVE) */}
+      {activeAuction && (
+        <div className="absolute inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4">
+          <div className="bg-white text-slate-900 rounded-t-3xl md:rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col md:flex-row animate-modal shadow-2xl overflow-hidden">
+             
+             {/* Header Móvil (Imagen) */}
+             <div className="w-full md:w-5/12 bg-blue-700 p-6 flex flex-col items-center justify-center text-white relative shrink-0">
+                <div className="w-24 h-24 md:w-40 md:h-40 bg-white rounded-full flex items-center justify-center mb-2 md:mb-6 border-4 border-blue-400/50 shadow-xl overflow-hidden shrink-0">
+                    <img src={activeAuction.cardData.image} alt={activeAuction.cardData.name} className="w-full h-full object-cover" onError={(e) => e.target.style.display = 'none'} />
+                    <Users className="w-10 h-10 text-slate-300 absolute" style={{display: activeAuction.cardData.image ? 'none' : 'block'}} />
+                </div>
+                <h2 className="text-xl md:text-3xl font-black text-center leading-tight mb-1">{activeAuction.cardData.name}</h2>
+                <div className="flex items-center gap-2 mb-2"><Shirt className="w-3 h-3 md:w-4 md:h-4 text-blue-300" /> <span className="text-blue-100 text-xs md:text-base font-medium">{activeAuction.cardData.team}</span></div>
+                <div className="bg-white text-blue-900 px-4 py-1 md:px-6 md:py-2 rounded-lg font-black text-2xl md:text-4xl shadow-lg">{activeAuction.cardData.rating}</div>
+             </div>
+
+             {/* Controles de Puja */}
+             <div className="w-full md:w-7/12 p-4 md:p-8 flex flex-col bg-slate-50 flex-1 overflow-hidden">
+                <div className="flex justify-between items-end mb-4 border-b border-slate-200 pb-2 shrink-0">
+                    <div>
+                        <h3 className="text-slate-400 font-bold text-[10px] uppercase">Precio</h3>
+                        <div className="text-3xl md:text-5xl font-black text-green-600">${activeAuction.currentPrice}M</div>
+                    </div>
+                    <div className="text-right">
+                        <h3 className="text-slate-400 font-bold text-[10px] uppercase">Líder</h3>
+                        <div className="text-sm md:text-lg font-bold text-slate-800 bg-yellow-300 px-3 py-1 rounded-full truncate max-w-[120px]">
+                            {participants[activeAuction.currentWinnerId].name}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto no-scrollbar mb-4 grid grid-cols-2 gap-2 md:gap-4 content-start">
+                    {participants.map(p => {
+                        const isWinner = p.id === activeAuction.currentWinnerId;
+                        const alreadyHasCard = p.squad[ROUNDS_SCHEDULE[roundIndex].key] !== null;
+                        if (alreadyHasCard) return null; 
+                        return (
+                            <button key={p.id} onClick={() => handleLiveBid(p.id)} disabled={isWinner} 
+                                className={`p-3 rounded-xl border-2 flex flex-col items-center justify-center transition-all min-h-[80px]
+                                ${isWinner ? 'bg-green-50 border-green-500 cursor-default' : 'bg-white border-slate-200 active:bg-yellow-100 active:border-yellow-400'}`}>
+                                <span className="font-bold text-slate-800 text-sm md:text-lg mb-1 truncate w-full text-center">{p.name}</span>
+                                <div className={`flex items-center gap-1 text-[10px] md:text-xs font-bold ${isWinner ? 'text-green-600' : 'text-slate-500'}`}>
+                                    {isWinner ? 'GANANDO' : `+ $${MIN_BID_INCREMENT}M`}
+                                </div>
+                            </button>
+                        );
+                    })}
+                </div>
+                <button onClick={finalizeAuction} className="w-full bg-slate-900 text-white font-bold py-4 rounded-xl shadow-xl flex items-center justify-center gap-2 text-base md:text-lg active:bg-slate-800 shrink-0">
+                    <HandCoins className="w-5 h-5 text-yellow-400" /> CERRAR VENTA
+                </button>
+             </div>
+          </div>
+        </div>
+      )}
+
+      {/* HEADER PRINCIPAL */}
+      <header className="bg-slate-950 px-4 py-3 border-b border-white/10 flex justify-between items-center z-10 shrink-0 h-14 md:h-16">
+        <div className="flex items-center gap-3">
+            <div className="bg-yellow-500 text-slate-900 font-black px-2 py-1 md:px-3 md:py-1 rounded text-xs md:text-sm whitespace-nowrap">R {roundIndex + 1}/11</div>
+            <div className="leading-tight">
+                <span className="text-[10px] md:text-xs text-slate-400 block uppercase">Mercado</span>
+                <span className="text-sm md:text-lg font-bold text-white uppercase text-yellow-400 truncate max-w-[150px] md:max-w-none block">{currentRoundInfo.label}</span>
+            </div>
+        </div>
+        <div className="flex gap-2 text-[10px] md:text-xs font-medium">
+            <div className="text-white bg-slate-800 px-2 py-1 md:px-3 rounded border border-slate-700">
+               {phase === 'AUCTION_BID' ? 'OFERTA' : 'SELECCIÓN'}
+            </div>
+        </div>
+      </header>
+
+      {/* LAYOUT PRINCIPAL RESPONSIVE: Columna en móvil, Fila en Desktop */}
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+        
+        {/* PANEL LATERAL / SUPERIOR (PARTICIPANTES) */}
+        <div className="w-full md:w-80 bg-slate-900 border-b md:border-b-0 md:border-r border-white/5 flex flex-col shrink-0 h-[35vh] md:h-auto z-20">
+          <div className="flex-1 overflow-y-auto no-scrollbar">
+            {participants.map((p) => {
+                const roundKey = ROUNDS_SCHEDULE[roundIndex].key;
+                const isCurrentPicker = phase === 'AUCTION_PICK' && activePickerId === p.id && !activeAuction;
+                const hasCardInRound = p.squad[roundKey] !== null;
+                return (
+                    <div key={p.id} className={`p-3 md:p-5 border-b border-white/5 transition-all relative
+                        ${isCurrentPicker ? 'bg-yellow-500/10' : ''} 
+                        ${hasCardInRound ? 'opacity-50 grayscale' : ''}`}>
+                        
+                        {isCurrentPicker && <div className="absolute left-0 top-0 bottom-0 w-1 bg-yellow-400 animate-pulse"></div>}
+                        
+                        <div className="flex justify-between items-center mb-1 md:mb-2">
+                            <div className="font-bold text-white text-sm md:text-lg leading-tight truncate w-1/2">
+                                {p.name}
+                            </div>
+                            <div className={`font-mono font-bold text-sm md:text-lg ${p.budget < 0 ? 'text-red-400' : 'text-green-400'}`}>
+                                ${p.budget}M
+                            </div>
+                        </div>
+
+                        {phase === 'AUCTION_BID' && !hasCardInRound && (
+                            <div className="flex items-center gap-2 mt-1">
+                                <div className="relative group flex-1">
+                                    <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-500" />
+                                    <input type="number" 
+                                        className="w-full bg-slate-950 text-white pl-7 pr-2 py-1.5 rounded text-sm border border-slate-700 focus:border-yellow-400 outline-none font-mono" 
+                                        value={currentBids[p.id] || ''} 
+                                        onChange={(e) => setCurrentBids({...currentBids, [p.id]: parseInt(e.target.value) || 0})} 
+                                        placeholder="0" 
+                                    />
+                                </div>
+                            </div>
+                        )}
+                        {isCurrentPicker && <div className="mt-1 text-yellow-400 text-[10px] md:text-xs font-bold animate-pulse flex items-center gap-1"><ChevronRight className="w-3 h-3" /> TU TURNO</div>}
+                    </div>
+                );
+            })}
+          </div>
+          
+          {phase === 'AUCTION_BID' && (
+             <div className="p-3 bg-slate-900 border-t border-white/10 shrink-0">
+                 <button onClick={submitBids} className="w-full bg-yellow-500 text-slate-900 font-bold py-3 rounded-lg shadow-lg active:scale-95 text-xs md:text-sm uppercase tracking-wider flex justify-center items-center gap-2">
+                     <Gavel className="w-4 h-4" /> OFERTAR
+                 </button>
+             </div>
+          )}
+        </div>
+
+        {/* ÁREA DE JUEGO (MESA) */}
+        <div className="flex-1 relative bg-slate-800 flex flex-col items-center justify-center p-4 overflow-hidden">
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-30 pointer-events-none"></div>
+            
+            {phase === 'AUCTION_PICK' && !activeAuction && (
+                 <div className="bg-yellow-500 text-slate-900 px-4 py-2 rounded-full mb-4 md:mb-8 z-10 shadow-lg animate-bounce text-xs md:text-sm font-bold border-2 border-slate-900/10 text-center max-w-[80%] truncate">
+                    Turno: {participants[activePickerId].name}
+                </div>
+            )}
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-8 z-10 w-full max-w-sm md:max-w-6xl h-full md:h-auto content-center">
+                {availableCards.map((card, idx) => (
+                    <div key={idx} 
+                        onClick={() => phase === 'AUCTION_PICK' && !card.revealed && !activeAuction && activePickerId !== undefined ? handlePickCard(idx) : null} 
+                        className={`relative group perspective-1000 aspect-[3/4]
+                            ${card.revealed ? 'cursor-default' : 'cursor-pointer'}
+                            ${phase === 'AUCTION_PICK' && !card.revealed && !activeAuction ? 'animate-pulse' : ''}`}
+                    >
+                        <div className={`w-full h-full transition-transform duration-700 preserve-3d relative ${card.revealed ? 'rotate-y-180' : ''}`}>
+                            
+                            {/* CARA TRASERA (SILUETA) */}
+                            {/* Usamos backface-hidden y un fondo sólido para que no se trasluzca nada */}
+                            <div className="absolute inset-0 backface-hidden bg-slate-700 rounded-xl shadow-lg border-4 border-slate-600 flex flex-col items-center justify-center z-20">
+                                <div className="w-16 h-16 md:w-24 md:h-24 bg-slate-800 rounded-full flex items-center justify-center mb-2 md:mb-4 shadow-inner">
+                                   <User className="w-8 h-8 md:w-12 md:h-12 text-slate-500" />
+                                </div>
+                                <div className="text-yellow-500/20 font-black text-4xl md:text-6xl select-none absolute bottom-2 right-2">?</div>
+                            </div>
+
+                            {/* CARA FRONTAL (VENDIDA) */}
+                            <div className="absolute inset-0 backface-hidden rotate-y-180 bg-slate-900 rounded-xl shadow-lg border-4 border-slate-500 flex flex-col items-center justify-center z-10">
+                                <div className="w-16 h-16 md:w-24 md:h-24 bg-slate-800 rounded-full flex items-center justify-center mb-3 shadow-lg">
+                                    <User className="w-8 h-8 md:w-12 md:h-12 text-slate-600" />
+                                </div>
+                                <div className="bg-red-500 text-white font-black text-[10px] md:text-xs uppercase px-2 py-0.5 rounded transform -rotate-6 shadow mb-1">
+                                    VENDIDO
+                                </div>
+                                <div className="text-white font-bold text-center text-xs md:text-base px-2 truncate w-full">
+                                    {card.finalStat?.name}
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Token de Jugador (Responsive)
+function PlayerToken({ player, label, small }) {
+    if (!player) return ( 
+        <div className={`flex flex-col items-center justify-center opacity-30 ${small ? 'scale-75' : ''}`}> 
+            <div className="w-6 h-6 md:w-10 md:h-10 rounded-full border border-dashed border-white bg-transparent"></div> 
+            <span className="text-[7px] md:text-[9px] mt-0.5 font-bold">{label}</span> 
+        </div> 
+    );
+    return (
+        <div className={`flex flex-col items-center group relative ${small ? 'scale-75' : ''}`}>
+             <div className={` ${player.rating >= 85 ? 'border-yellow-400 ring-1 md:ring-2 ring-yellow-400/50' : 'border-white'} w-8 h-8 md:w-12 md:h-12 rounded-full border-2 bg-slate-800 flex items-center justify-center overflow-hidden shadow-lg relative z-10`}>
+                {player.image ? ( <img src={player.image} alt="" className="w-full h-full object-cover" /> ) : ( <span className="font-black text-white text-xs md:text-base">{player.rating}</span> )}
+             </div>
+             <div className="bg-slate-900 text-white text-[7px] md:text-[9px] px-1.5 py-0.5 rounded-full mt-[-4px] md:mt-[-6px] z-20 font-bold uppercase whitespace-nowrap border border-slate-700 shadow-md max-w-[50px] md:max-w-none truncate"> 
+                {player.name.split(' ').pop()} 
+             </div>
+        </div>
+    )
+}

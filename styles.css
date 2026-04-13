@@ -1193,30 +1193,215 @@ body::before {
 }
 
 /* ========== RESPONSIVE ========== */
+
+/* Tablet grande: 1024px */
+@media (max-width: 1024px) {
+    .auction-card-wrap {
+        grid-template-columns: 280px 1fr;
+    }
+
+    .squad-builder {
+        grid-template-columns: 1fr 260px;
+    }
+}
+
+/* Tablet: 768px */
 @media (max-width: 768px) {
+
+    /* Auction: carta arriba, pujas abajo */
+    .auction-card-wrap {
+        grid-template-columns: 1fr;
+        max-width: 480px;
+    }
+
+    .auction-progress {
+        grid-column: 1;
+    }
+
+    .player-card {
+        max-width: 340px;
+        margin: 0 auto;
+    }
+
+    /* Sidebar más angosta */
+    .auction-sidebar {
+        width: 200px;
+        padding: 0.75rem;
+    }
+
+    /* Squad builder: cancha arriba, lista abajo */
     .squad-builder {
         grid-template-columns: 1fr;
     }
 
-    .auction-sidebar {
-        width: 200px;
+    .squad-list {
+        max-height: 200px;
     }
 
+    /* Setup */
     .player-row {
         grid-template-columns: 1fr;
     }
+
+    /* Modal plantilla: una columna */
+    #modal-my-squad .modal>div:last-child {
+        grid-template-columns: 1fr !important;
+    }
+
+    .logo h1 {
+        font-size: clamp(2.5rem, 6vw, 4rem);
+    }
 }
 
+/* Mobile: 600px */
 @media (max-width: 600px) {
+
+    /* Sidebar se convierte en barra horizontal arriba */
     #screen-auction {
         flex-direction: column;
     }
 
     .auction-sidebar {
         width: 100%;
-        max-height: 200px;
+        max-height: 160px;
         flex-direction: row;
         flex-wrap: wrap;
         overflow-x: auto;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        border-right: none;
+        border-bottom: 1px solid rgba(245, 200, 66, 0.15);
     }
+
+    /* Ocultar historial en mobile, solo presupuestos */
+    #sidebar-history {
+        display: none;
+    }
+
+    .auction-sidebar>div:nth-child(3) {
+        display: none;
+    }
+
+    .auction-main {
+        padding: 0.75rem;
+    }
+
+    .auction-card-wrap {
+        gap: 0.75rem;
+    }
+
+    .player-card {
+        max-width: 100%;
+    }
+
+    .card-top {
+        height: 220px;
+    }
+
+    .bidding-area {
+        padding: 0.75rem;
+        gap: 0.5rem;
+    }
+
+    .buyer-btns {
+        gap: 0.4rem;
+    }
+
+    .buyer-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.75rem;
+    }
+
+    .price-row input {
+        font-size: 1rem;
+    }
+
+    .btn {
+        display: block;
+        padding: 5px 10px;
+        margin-top: 5px;
+        font-size: 0.8rem;
+        justify-self: center;
+    }
+
+    /* Squad builder mobile */
+    #screen-squad {
+        padding: 0.75rem;
+    }
+
+    .squad-wrap {
+        max-width: 100%;
+    }
+
+    .squad-header {
+        margin-bottom: 0.75rem;
+    }
+
+    .pitch {
+        max-height: 360px;
+    }
+
+    .pitch-player-circle {
+        width: 34px;
+        height: 34px;
+        font-size: 0.55rem;
+    }
+
+    .pitch-player {
+        width: 52px;
+    }
+
+    /* Setup mobile */
+    .setup-wrap {
+        padding: 1.25rem;
+    }
+
+    /* Presentation mobile */
+    .teams-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Market mobile */
+    .market-wrap {
+        padding: 1rem;
+    }
+
+    /* Modal mobile */
+    .modal {
+        padding: 1.25rem;
+        width: 95%;
+    }
+}
+
+/* Mobile pequeño: 400px */
+@media (max-width: 400px) {
+    .logo h1 {
+        font-size: 2.5rem;
+    }
+
+    .auction-sidebar {
+        display: block;
+    }
+
+    #sidebar-budgets {
+        display: flex;
+        gap: 0.5rem;
+        overflow-x: auto;
+
+    }
+
+    .player-budget-card {
+        font-size: 0.7rem;
+        padding: 0.4rem 0.6rem;
+    }
+
+    .card-top {
+        height: 180px;
+    }
+
+    .hint-item {
+        font-size: 0.75rem;
+    }
+
+
 }

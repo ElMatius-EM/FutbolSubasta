@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subasta Futbolera</title>
+    <link rel="stylesheet" href="styles.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@300;400;600;700&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- ===================== SCREEN: HOME ===================== -->
+    <div id="screen-home" class="screen active">
+        <div class="logo">
+            <h1>Subasta<br>Futbolera</h1>
+            <p>El juego de las estrellas</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:1rem;min-width:220px;">
+            <button class="btn btn-gold" onclick="goTo('screen-setup')">Nueva Partida</button>
+            <button class="btn btn-outline" onclick="showRules()">Reglas</button>
+        </div>
+    </div>
+
+    <!-- ===================== SCREEN: SETUP ===================== -->
+    <div id="screen-setup" class="screen">
+        <div class="setup-wrap panel">
+            <div class="logo" style="margin-bottom:1rem;">
+                <h1 style="font-size:2.5rem;">Subasta Futbolera</h1>
+            </div>
+            <div class="section-title">¿Cuántos jugadores?</div>
+            <div class="player-count-btns" id="count-btns">
+                <button class="btn btn-outline active" onclick="setPlayerCount(2)">2</button>
+                <button class="btn btn-outline" onclick="setPlayerCount(3)">3</button>
+                <button class="btn btn-outline" onclick="setPlayerCount(4)">4</button>
+            </div>
+            <div class="players-form" id="players-form"></div>
+            <div style="margin-top:2rem;display:flex;gap:1rem;justify-content:flex-end;">
+                <button class="btn btn-outline" onclick="goTo('screen-home')">Volver</button>
+                <button class="btn btn-gold" onclick="startGame()">¡Comenzar Subasta!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== SCREEN: AUCTION ===================== -->
+    <div id="screen-auction" class="screen">
+        <div class="auction-sidebar">
+            <div style="font-family:'Bebas Neue',cursive;font-size:1.2rem;color:var(--gold);letter-spacing:0.1em;">
+                Presupuestos</div>
+            <div id="sidebar-budgets"></div>
+            <div
+                style="font-family:'Oswald',sans-serif;font-size:0.7rem;letter-spacing:0.2em;color:rgba(245,200,66,0.5);text-transform:uppercase;margin-top:0.5rem;">
+                Historial</div>
+            <div id="sidebar-history" style="overflow-y:auto;max-height:300px;"></div>
+            <button class="btn btn-outline btn-sm" onclick="openMySquad()" style="margin-top:auto;">
+                ⚽ Mi Plantilla
+            </button>
+        </div>
+        <div class="auction-main">
+            <div class="auction-progress" id="auction-progress">Jugador 1 de 56</div>
+            <div class="auction-card-wrap">
+
+                <!-- IZQUIERDA: Carta del jugador -->
+                <div class="player-card" id="player-card">
+                    <div class="card-top" id="card-top">
+                        <div class="card-silhouette" id="card-silhouette">
+                            <svg class="silhouette-svg" id="silhouette-svg" viewBox="0 0 120 200"
+                                xmlns="http://www.w3.org/2000/svg"></svg>
+                        </div>
+                        <div class="card-badge-pos" id="card-pos">DEL</div>
+                        <div class="card-badge-rarity" id="card-rarity">⭐</div>
+                        <div class="trap-banner" id="trap-banner">⚠ CARTA TRAMPA ⚠</div>
+                    </div>
+                    <div class="card-bottom">
+                        <div class="card-name hidden" id="card-name">???</div>
+                        <div class="card-sub" id="card-sub">???</div>
+                        <div class="card-value" id="card-value"></div>
+                        <div class="card-hints" id="card-hints"></div>
+                    </div>
+                </div>
+
+                <!-- DERECHA: Área de pujas -->
+                <div class="bidding-area" id="bidding-area">
+                    <div class="who-buys">¿Quién compra este jugador?</div>
+                    <div class="buyer-btns" id="buyer-btns"></div>
+                    <div class="price-row">
+                        <input type="number" id="price-input" placeholder="Precio (M)" min="1" />
+                        <button class="btn btn-gold" onclick="confirmPurchase()">Comprar</button>
+                    </div>
+                    <div class="skip-info" id="skip-info"></div>
+                    <div class="action-row">
+                        <button class="btn btn-outline btn-sm" onclick="skipAll()">Descartar (todos skipean)</button>
+                    </div>
+                    <button id="continue-btn" class="btn btn-gold" style="display:none;width:100%;margin-top:1rem;"
+                        onclick="nextCard()">
+                        Siguiente jugador →
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== SCREEN: SQUAD ===================== -->
+    <div id="screen-squad" class="screen">
+        <div class="squad-wrap">
+            <div class="squad-header">
+                <div style="font-family:'Bebas Neue',cursive;font-size:2rem;color:var(--gold);">Armá tu equipo</div>
+                <button class="btn btn-gold" id="squad-done-btn" onclick="squadDone()">Listo →</button>
+            </div>
+            <div class="squad-tabs" id="squad-tabs"></div>
+            <div class="squad-builder">
+                <div class="pitch-wrap">
+                    <select class="tactic-select" id="tactic-select" onchange="changeTactic()">
+                        <option value="4-3-3">4-3-3</option>
+                        <option value="4-4-2">4-4-2</option>
+                        <option value="4-2-3-1">4-2-3-1</option>
+                        <option value="3-5-2">3-5-2</option>
+                        <option value="5-3-2">5-3-2</option>
+                        <option value="4-5-1">4-5-1</option>
+                        <option value="3-4-3">3-4-3</option>
+                    </select>
+                    <div class="pitch" id="pitch">
+                        <div class="pitch-halfway"></div>
+                        <div class="pitch-center"></div>
+                        <div class="pitch-area-top"></div>
+                        <div class="pitch-area-bot"></div>
+                        <div class="pitch-slots" id="pitch-slots"></div>
+                    </div>
+                    <div style="margin-top:1rem;">
+                        <div class="bench-title">Suplentes</div>
+                        <div class="bench-slots" id="bench-slots"></div>
+                    </div>
+                    <div style="margin-top:0.75rem;" id="dt-slot-wrap">
+                        <div class="bench-title">Director Técnico</div>
+                        <div id="dt-slot" class="bench-player" onclick="assignDT()">Asignar DT</div>
+                    </div>
+                </div>
+                <div class="squad-list-panel">
+                    <div class="squad-list-title">Plantel adquirido</div>
+                    <div class="squad-list" id="squad-list"></div>
+                    <div class="squad-info" id="squad-info"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== SCREEN: MARKET ===================== -->
+    <div id="screen-market" class="screen">
+        <div class="market-wrap panel">
+            <div style="font-family:'Bebas Neue',cursive;font-size:2.5rem;color:var(--gold);margin-bottom:0.25rem;">
+                Mercado de Rumores</div>
+            <div style="font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:1.5rem;">Cada equipo puede hacer
+                hasta 2 transferencias</div>
+            <div id="market-content"></div>
+            <div style="margin-top:1.5rem;text-align:right;">
+                <button class="btn btn-gold" onclick="goToPresentation()">Continuar a la Presentación →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== SCREEN: PRESENTATION ===================== -->
+    <div id="screen-presentation" class="screen">
+        <div class="pres-wrap">
+            <div class="logo" style="margin-bottom:1.5rem;">
+                <h1 style="font-size:3rem;">Presentación Final</h1>
+            </div>
+            <div class="teams-grid" id="teams-grid"></div>
+            <div class="vote-section panel" id="vote-section">
+                <div class="section-title">¿Quién armó el mejor equipo?</div>
+                <div class="vote-btns" id="vote-btns"></div>
+                <div style="color:rgba(255,255,255,0.5);font-size:0.85rem;margin-bottom:1rem;" id="vote-status"></div>
+                <button class="btn btn-outline" onclick="aiJudge()">Que decida la IA Juez ⚽</button>
+                <div class="ai-verdict" id="ai-verdict" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== MODALS ===================== -->
+    <div class="modal-overlay" id="modal-rules">
+        <div class="modal">
+            <h3>Reglas del Juego</h3>
+            <div style="font-size:0.85rem;line-height:1.8;color:rgba(255,255,255,0.8);">
+                <p>💰 <strong>Presupuesto:</strong> $1.000M por jugador</p>
+                <p>📋 <strong>Plantilla:</strong> 11 titulares + 3 suplentes + 1 DT</p>
+                <p>🕵️ <strong>Silueta:</strong> El jugador aparece oculto con pistas</p>
+                <p>⏭️ <strong>Skips:</strong> 5 por jugador para descartar</p>
+                <p>🃏 <strong>Trampas:</strong> Hasta 4 cartas engañosas por partida</p>
+                <p>🏆 <strong>Leyendas:</strong> Figuras históricas también disponibles</p>
+                <p>🔄 <strong>Mercado:</strong> 2 transferencias entre equipos antes del final</p>
+            </div>
+            <div class="modal-actions"><button class="btn btn-gold"
+                    onclick="closeModal('modal-rules')">Entendido</button></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-assign">
+        <div class="modal">
+            <h3 id="modal-assign-title">Asignar posición</h3>
+            <div id="modal-assign-slots"></div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal('modal-assign')">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-offer">
+        <div class="modal">
+            <h3>Hacer oferta</h3>
+            <div id="modal-offer-content"></div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal('modal-offer')">Cancelar</button>
+                <button class="btn btn-gold" onclick="submitOffer()">Enviar Oferta</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== MODAL: MI PLANTILLA ===================== -->
+    <div class="modal-overlay" id="modal-my-squad">
+        <div class="modal" style="max-width:900px;width:95%;max-height:90vh;overflow-y:auto;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                <h3 id="my-squad-title">Mi Plantilla</h3>
+                <button class="btn btn-outline btn-sm"
+                    onclick="closeModal('modal-my-squad'); state._mySquadPendingSlot = null;">Cerrar</button>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 300px;gap:1.5rem;">
+                <div>
+                    <select class="tactic-select" id="my-squad-tactic" onchange="mySquadChangeTactic()">
+                        <option value="4-3-3">4-3-3</option>
+                        <option value="4-4-2">4-4-2</option>
+                        <option value="4-2-3-1">4-2-3-1</option>
+                        <option value="3-5-2">3-5-2</option>
+                        <option value="5-3-2">5-3-2</option>
+                        <option value="4-5-1">4-5-1</option>
+                        <option value="3-4-3">3-4-3</option>
+                    </select>
+                    <div class="pitch" id="my-squad-pitch" style="max-height:460px;">
+                        <div class="pitch-halfway"></div>
+                        <div class="pitch-center"></div>
+                        <div class="pitch-area-top"></div>
+                        <div class="pitch-area-bot"></div>
+                        <div class="pitch-slots" id="my-squad-pitch-slots"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="squad-list-title">Jugadores adquiridos</div>
+                    <div id="my-squad-cards"
+                        style="display:flex;flex-direction:column;gap:0.5rem;max-height:520px;overflow-y:auto;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+
+</body>
+
+</html>
